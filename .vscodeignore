@@ -7,3 +7,7 @@ docs/**
 tsconfig.json
 *.map
 *.vsix
+*.excalidraw
+.github/**
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md

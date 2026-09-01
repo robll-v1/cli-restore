@@ -17,6 +17,7 @@ export interface TerminalMatch<T extends RestoredTerminal> {
 export function matchTerminals<T extends RestoredTerminal>(
   snapshots: readonly TerminalSnapshot[],
   terminals: readonly T[],
+  caseInsensitiveCwd = process.platform === 'win32',
 ): TerminalMatch<T>[] {
   const remaining = new Set(terminals);
   const matches: TerminalMatch<T>[] = [];
@@ -31,7 +32,9 @@ export function matchTerminals<T extends RestoredTerminal>(
 
   for (const snapshot of snapshots) {
     if (matches.some((match) => match.snapshot === snapshot) || !snapshot.cwd) continue;
-    const terminal = [...remaining].find((candidate) => candidate.cwd === snapshot.cwd);
+    const expectedCwd = caseInsensitiveCwd ? snapshot.cwd.toLowerCase() : snapshot.cwd;
+    const terminal = [...remaining].find((candidate) =>
+      (caseInsensitiveCwd ? candidate.cwd.toLowerCase() : candidate.cwd) === expectedCwd);
     if (terminal) {
       matches.push({ snapshot, terminal });
       remaining.delete(terminal);

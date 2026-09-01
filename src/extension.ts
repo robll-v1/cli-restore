@@ -6,7 +6,7 @@ import { createDetector } from './detect';
 import { RestoreService } from './restore/RestoreService';
 import { ResumeCommands } from './restore/commands';
 
-export function activate(context: vscode.ExtensionContext): void {
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const logger = new Logger();
   context.subscriptions.push(logger);
   try {
@@ -22,15 +22,16 @@ export function activate(context: vscode.ExtensionContext): void {
     const detector = createDetector();
     const snapshotDetector = { detect: async (processId: number | undefined) =>
       processId === undefined ? 'unknown' as const : detector.detect(processId) };
-    const snapshots = new SnapshotService(store, logger, snapshotDetector, interval);
     const commands = config.get<Partial<ResumeCommands>>('commands', {});
     const quietMs = config.get<number>('restoreQuietMs', 2_000);
     const restore = new RestoreService(detector, logger, commands, quietMs);
-    context.subscriptions.push(snapshots);
     context.subscriptions.push(restore);
-    context.subscriptions.push(vscode.window.onDidCloseTerminal(() => { void snapshots.capture(); }));
-    void restore.restore(priorSnapshot);
-    void snapshots.capture();
+    await restore.restore(priorSnapshot);
+
+    const snapshots = new SnapshotService(store, logger, snapshotDetector, interval);
+    context.subscriptions.push(snapshots);
+    context.subscriptions.push(vscode.window.onDidCloseTerminal(() => snapshots.requestCapture()));
+    await snapshots.capture();
     logger.info('CLI RESTORE activated.');
   } catch (error) {
     logger.error('Activation failed', error);

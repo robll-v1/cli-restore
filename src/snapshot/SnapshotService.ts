@@ -20,6 +20,7 @@ function cwdOf(terminal: vscode.Terminal): string {
 
 export class SnapshotService implements vscode.Disposable {
   private timer?: ReturnType<typeof setInterval>;
+  private debounceTimer?: ReturnType<typeof setTimeout>;
   private readonly detector: CliDetector;
 
   constructor(
@@ -33,7 +34,12 @@ export class SnapshotService implements vscode.Disposable {
   }
 
   async capture(): Promise<void> {
-    const terminals = await Promise.all(vscode.window.terminals.map(async (terminal) => {
+    const liveTerminals = [...vscode.window.terminals];
+    if (liveTerminals.length === 0) {
+      this.logger.info('Skipping empty terminal snapshot to preserve the last restorable state.');
+      return;
+    }
+    const terminals = await Promise.all(liveTerminals.map(async (terminal) => {
       try {
         const cli = await this.detector.detect(await terminal.processId);
         return { name: terminal.name, cwd: cwdOf(terminal), cli };
@@ -51,8 +57,18 @@ export class SnapshotService implements vscode.Disposable {
     }
   }
 
+  requestCapture(delayMs = 250): void {
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => {
+      this.debounceTimer = undefined;
+      void this.capture();
+    }, Math.max(0, delayMs));
+  }
+
   dispose(): void {
     if (this.timer) clearInterval(this.timer);
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.timer = undefined;
+    this.debounceTimer = undefined;
   }
 }

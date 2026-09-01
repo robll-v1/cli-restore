@@ -57,7 +57,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -p ./ -w",
     "check": "tsc -p ./ --noEmit",
-    "test": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .test-dist src/test/core.test.ts src/restore/commands.ts src/restore/matcher.ts src/snapshot/model.ts && node --test .test-dist/test/core.test.js",
+    "test": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .test-dist src/test/core.test.ts src/restore/commands.ts src/restore/matcher.ts src/snapshot/model.ts src/detect/windows/WindowsProcessTree.ts src/detect/CliType.ts src/detect/Detector.ts && node --test .test-dist/test/core.test.js",
     "prepackage": "npm run compile",
     "package": "vsce package --out cli-restore.vsix"
   },

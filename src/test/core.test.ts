@@ -3,6 +3,7 @@ import test from 'node:test';
 import { resumeCommand } from '../restore/commands';
 import { matchTerminals } from '../restore/matcher';
 import { isSnapshot, TerminalSnapshot } from '../snapshot/model';
+import { classifyProcess, classifyProcessTree } from '../detect/windows/WindowsProcessTree';
 
 test('matches terminal names before cwd and consumes each live terminal once', () => {
   const snapshots: TerminalSnapshot[] = [
@@ -24,6 +25,31 @@ test('falls back to cwd only for unmatched snapshots', () => {
   );
   assert.equal(matches.length, 1);
   assert.equal(matches[0].terminal.name, 'new name');
+});
+
+test('matches Windows cwd without case sensitivity', () => {
+  const matches = matchTerminals(
+    [{ name: 'old', cwd: 'C:/CODE/Project', cli: 'codex' }],
+    [{ name: 'new', cwd: 'c:/code/project' }],
+    true,
+  );
+  assert.equal(matches.length, 1);
+});
+
+test('classifies native CLIs and node wrappers while excluding Codex helpers', () => {
+  assert.equal(classifyProcess('claude.exe'), 'claude');
+  assert.equal(classifyProcess('node.exe', 'node C:\\tools\\codex\\bin\\codex.js'), 'codex');
+  assert.equal(classifyProcess('node.exe', 'node C:\\tools\\opencode\\index.js'), 'opencode');
+  assert.equal(classifyProcess('codex-code-mode-host.exe'), 'unknown');
+});
+
+test('classifies nested CLI processes within the configured tree depth', () => {
+  const records = [
+    { processId: 11, parentProcessId: 10, name: 'cmd.exe' },
+    { processId: 12, parentProcessId: 11, name: 'node.exe', commandLine: 'node C:\\claude\\cli.js' },
+  ];
+  assert.equal(classifyProcessTree(10, records), 'claude');
+  assert.equal(classifyProcessTree(99, records), 'unknown');
 });
 
 test('uses defaults, honors overrides, and rejects unknown CLIs', () => {

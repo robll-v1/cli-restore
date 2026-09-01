@@ -47,11 +47,13 @@ export class RestoreService implements vscode.Disposable {
     }));
     const matches = matchTerminals(snapshot.terminals, terminals);
     this.logger.info(`Matched ${matches.length} of ${snapshot.terminals.length} terminal snapshot(s).`);
-
     for (const match of matches) {
-      if (this.disposed) return;
-      await this.restoreTerminal(match.terminal.terminal, match.snapshot.cli);
+      this.logger.info(`Match: "${match.snapshot.name}" (${match.snapshot.cwd}) -> "${match.terminal.name}" (${match.terminal.cwd}), CLI=${match.snapshot.cli}.`);
     }
+
+    await Promise.all(matches.map(async (match) => {
+      if (!this.disposed) await this.restoreTerminal(match.terminal.terminal, match.snapshot.cli);
+    }));
   }
 
   dispose(): void { this.disposed = true; }
