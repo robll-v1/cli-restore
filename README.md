@@ -1,5 +1,11 @@
 # CLI RESTORE
 
+Restore interactive CLI sessions in VS Code integrated terminals.
+
+CLI RESTORE relies on VS Code to restore terminal layout and working directories, then detects and resumes supported CLI sessions in place.
+
+Supported CLIs: Claude, OpenCode, and Codex. Windows process-tree detection is available today; other platforms safely skip detection until their adapters are implemented.
+
 VS Code extension that snapshots integrated-terminal CLI sessions and resumes them after VS Code restores the terminal layout.
 
 ## Development
@@ -11,7 +17,13 @@ npm test
 npm run compile
 ```
 
-The extension stores snapshots in VS Code `workspaceState`, detects CLI processes through a platform adapter, and uses `terminal.sendText` for interactive resume commands.
+Snapshots are stored only in VS Code `workspaceState`. No project files or session IDs are written. Interactive commands are sent with `terminal.sendText`.
+
+## Project Status
+
+This project is in early development. Feedback, reproduction steps, tests, and platform adapter contributions are welcome.
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ## Debugging and Packaging
 
