@@ -7,7 +7,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-account/cli-restore"
+    "url": "https://github.com/robll-v1/cli-restore.git"
+  },
+  "homepage": "https://github.com/robll-v1/cli-restore#readme",
+  "bugs": {
+    "url": "https://github.com/robll-v1/cli-restore/issues"
   },
   "engines": {
     "vscode": ">=1.125.0"
