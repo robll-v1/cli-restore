@@ -1,0 +1,66 @@
+{
+  "name": "cli-restore",
+  "displayName": "CLI RESTORE",
+  "description": "Restore CLI sessions in VS Code integrated terminals.",
+  "version": "0.0.1",
+  "publisher": "cli-restore",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-account/cli-restore"
+  },
+  "engines": {
+    "vscode": ">=1.125.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "CLI RESTORE",
+      "properties": {
+        "cliResume.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable CLI RESTORE."
+        },
+        "cliResume.snapshotIntervalSec": {
+          "type": "number",
+          "default": 60,
+          "minimum": 5,
+          "description": "Snapshot interval in seconds."
+        },
+        "cliResume.commands": {
+          "type": "object",
+          "default": {},
+          "description": "Optional CLI resume command overrides.",
+          "properties": {
+            "claude": { "type": "string" },
+            "opencode": { "type": "string" },
+            "codex": { "type": "string" }
+          }
+        },
+        "cliResume.restoreQuietMs": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 0,
+          "description": "Terminal-open quiet period before restoring sessions in milliseconds."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -p ./ -w",
+    "check": "tsc -p ./ --noEmit",
+    "test": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .test-dist src/test/core.test.ts src/restore/commands.ts src/restore/matcher.ts src/snapshot/model.ts && node --test .test-dist/test/core.test.js",
+    "prepackage": "npm run compile",
+    "package": "vsce package --out cli-restore.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.125.0",
+    "typescript": "^5.7.2",
+    "@vscode/vsce": "^3.6.1"
+  }
+}
