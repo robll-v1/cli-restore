@@ -14,6 +14,17 @@ export interface ProcessRecord {
   processId?: number;
 }
 
+/** Normalizes PowerShell's default PascalCase JSON properties at the boundary. */
+export function normalizeProcessRecord(value: unknown): ProcessRecord {
+  const record = (value && typeof value === 'object') ? value as Record<string, unknown> : {};
+  return {
+    name: typeof record.name === 'string' ? record.name : typeof record.Name === 'string' ? record.Name : undefined,
+    commandLine: typeof record.commandLine === 'string' ? record.commandLine : typeof record.CommandLine === 'string' ? record.CommandLine : undefined,
+    parentProcessId: typeof record.parentProcessId === 'number' ? record.parentProcessId : typeof record.ParentProcessId === 'number' ? record.ParentProcessId : undefined,
+    processId: typeof record.processId === 'number' ? record.processId : typeof record.ProcessId === 'number' ? record.ProcessId : undefined,
+  };
+}
+
 interface CachedResult {
   value: CliType;
   expiresAt: number;
@@ -75,7 +86,7 @@ export class WindowsProcessTree implements Detector {
         '-NoProfile', '-NonInteractive', '-Command', this.queryScript(pid),
       ], { timeout: QUERY_TIMEOUT_MS, windowsHide: true, maxBuffer: 1024 * 1024 });
       const parsed = JSON.parse(stdout.trim() || '[]');
-      const records: ProcessRecord[] = Array.isArray(parsed) ? parsed : [parsed];
+      const records: ProcessRecord[] = (Array.isArray(parsed) ? parsed : [parsed]).map(normalizeProcessRecord);
       result = classifyProcessTree(pid, records);
     } catch {
       result = 'unknown';
@@ -86,6 +97,6 @@ export class WindowsProcessTree implements Detector {
 
   private queryScript(pid: number): string {
     // PID is validated as an integer before this method is called.
-    return `$p=Get-CimInstance Win32_Process; $root=${pid}; $front=@($root); $out=@(); for($d=0;$d -lt 3 -and $front.Count -gt 0;$d++){ $kids=@($p | Where-Object { $front -contains $_.ParentProcessId }); if($kids.Count -eq 0){break}; $out += $kids | Select-Object Name,CommandLine,ParentProcessId,ProcessId; $front=@($kids | ForEach-Object ProcessId) }; $out | ConvertTo-Json -Compress`;
+    return `$p=Get-CimInstance Win32_Process; $root=${pid}; $front=@($root); $out=@(); for($d=0;$d -lt 3 -and $front.Count -gt 0;$d++){ $kids=@($p | Where-Object { $front -contains $_.ParentProcessId }); if($kids.Count -eq 0){break}; $out += $kids | Select-Object @{n='name';e={$_.Name}},@{n='commandLine';e={$_.CommandLine}},@{n='parentProcessId';e={$_.ParentProcessId}},@{n='processId';e={$_.ProcessId}}; $front=@($kids | ForEach-Object ProcessId) }; $out | ConvertTo-Json -Compress`;
   }
 }

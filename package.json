@@ -2,7 +2,7 @@
   "name": "cli-restore",
   "displayName": "CLI RESTORE",
   "description": "Restore CLI sessions in VS Code integrated terminals.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "cli-restore",
   "license": "MIT",
   "repository": {

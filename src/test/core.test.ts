@@ -3,7 +3,7 @@ import test from 'node:test';
 import { resumeCommand } from '../restore/commands';
 import { matchTerminals } from '../restore/matcher';
 import { isSnapshot, TerminalSnapshot } from '../snapshot/model';
-import { classifyProcess, classifyProcessTree } from '../detect/windows/WindowsProcessTree';
+import { classifyProcess, classifyProcessTree, normalizeProcessRecord } from '../detect/windows/WindowsProcessTree';
 
 test('matches terminal names before cwd and consumes each live terminal once', () => {
   const snapshots: TerminalSnapshot[] = [
@@ -50,6 +50,22 @@ test('classifies nested CLI processes within the configured tree depth', () => {
   ];
   assert.equal(classifyProcessTree(10, records), 'claude');
   assert.equal(classifyProcessTree(99, records), 'unknown');
+});
+
+test('normalizes PowerShell PascalCase process records', () => {
+  const record = normalizeProcessRecord({
+    Name: 'node.exe',
+    CommandLine: 'node C:\\claude\\cli.js',
+    ParentProcessId: 10,
+    ProcessId: 11,
+  });
+  assert.deepEqual(record, {
+    name: 'node.exe',
+    commandLine: 'node C:\\claude\\cli.js',
+    parentProcessId: 10,
+    processId: 11,
+  });
+  assert.equal(classifyProcessTree(10, [record]), 'claude');
 });
 
 test('uses defaults, honors overrides, and rejects unknown CLIs', () => {
